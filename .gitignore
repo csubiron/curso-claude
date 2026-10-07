@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build output and caches
+dist/
+coverage/
+.angular/
+
+# Local databases
+*.db
+*.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local env and settings
+.env
+.env.*
+.claude/settings.local.json
