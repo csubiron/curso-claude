@@ -43,10 +43,11 @@ describe('SqliteTableRepository (Integration)', () => {
 
     describe('save, findById and delete', () => {
         it('should save and find a table by id', async () => {
-            await repo.save(buildTable())
+            const table = buildTable()
+            await repo.save(table)
 
             const found = await repo.findById('t1')
-            expect(found).toEqual(buildTable({ createdAt: found?.createdAt, updatedAt: found?.updatedAt }))
+            expect(found).toEqual(table)
             expect(typeof found?.number).toBe('number')
             expect(typeof found?.capacity).toBe('number')
         })
