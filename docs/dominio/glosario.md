@@ -17,6 +17,7 @@ Terminología del dominio y conceptos técnicos utilizados en el proyecto Restte
 | **DishIngredient** | Relación entre un plato y un ingrediente, con la cantidad necesaria. |
 | **Order** | Pedido realizado por un cliente. Contiene ítems (platos) y está asociado a un restaurante. |
 | **OrderItem** | Línea de un pedido: un plato con cantidad, notas opcionales y estado. |
+| **Table (Mesa)** | Mesa de un restaurante. Tiene número (único dentro del restaurante), descripción opcional, capacidad (personas) y estado. Un pedido puede llevar el `id` de la mesa en `tableId`. |
 
 Dos particularidades del modelo que conviene tener presentes:
 
@@ -43,6 +44,16 @@ El valor almacenado es `manager`; "gerente" es solo su traducción en la interfa
 | **preparando** | Ítem siendo preparado en cocina. | cocinero |
 | **listo** | Ítem preparado, listo para servir. | cocinero |
 | **entregado** | Ítem entregado al cliente. Desaparece de las vistas activas. | camarero |
+
+### Estados de Mesa
+
+| Estado | Descripción | Quién lo cambia |
+| --- | --- | --- |
+| **libre** | Mesa disponible. Es la única que ven y pueden ocupar los clientes. | — (estado inicial), empleados, admin |
+| **ocupada** | Mesa en uso. No se puede borrar. | cliente (al elegirla con "Continuar"), empleados, admin |
+| **reservada** | Mesa apartada a mano. No aparece como disponible para los clientes. No hay reservas con fecha y hora. | empleados, admin |
+
+Los "empleados" son `manager`, `camarero` y `cocinero`. No hay reglas de transición: se puede pasar de cualquier estado a cualquier otro. La mesa **no se libera sola** al terminar o pagar el pedido: la liberan los empleados a mano. `normalizeTableStatus()` acepta los valores con `trim()` + `toLowerCase()` y rechaza el resto con `InvalidTableStatusError`.
 
 ### Categorías de Platos
 
@@ -89,7 +100,7 @@ Las tres capas aplican al contexto `employee`:
 | **Application** | Casos de uso. Orquesta la lógica de negocio. |
 | **Infrastructure** | Implementaciones concretas: BD, HTTP, servicios externos. |
 
-En `restaurant`, `dish`, `ingredient` y `order` la separación equivalente es por carpetas: `models/`, `repositories/`, `services/`, `controllers/` y `routes/`.
+En `restaurant`, `dish`, `ingredient`, `order` y `table` la separación equivalente es por carpetas: `models/`, `repositories/`, `services/`, `controllers/` y `routes/`.
 
 ### Patrones
 
