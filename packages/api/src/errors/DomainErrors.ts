@@ -168,3 +168,21 @@ export class InvalidTableStatusError extends AppError {
   }
 }
 
+export class InvalidTableNumberError extends AppError {
+  constructor() {
+    super('Table number must be an integer greater than or equal to 1')
+  }
+}
+
+export class InvalidCapacityError extends AppError {
+  constructor() {
+    super('Capacity must be an integer greater than or equal to 1')
+  }
+}
+
+export class DuplicatedTableNumberError extends AppError {
+  constructor() {
+    super('A table with this number already exists in the restaurant')
+  }
+}
+
