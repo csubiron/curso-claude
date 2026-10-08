@@ -67,6 +67,21 @@ Ninguna de las tres aplicaciones tiene carpeta `shared/` propia: lo compartido v
 
 ---
 
+## Mesas en web-admin
+
+La feature `features/tables` permite al admin gestionar las mesas de cada restaurante (CRUD). Sigue la misma estructura que `features/ingredients`:
+
+- **Rutas:** `tables.routes.ts` cuelga de `restaurants/:restaurantId/tables`, con `''` (lista), `new` (alta) y `:id/edit` (edición). Se llega desde el enlace "Mesas" del submenú del restaurante en el shell y desde la tarjeta "Mesas" del dashboard del restaurante (icono `armchair`).
+- **`models/table.model.ts`:** `Table`, `TableStatus` (`libre`, `ocupada`, `reservada`), `CreateTableDto` (`number`, `description`, `capacity`) y `UpdateTableDto` (los mismos campos más `status`).
+- **`services/table.service.ts`:** `getAll`, `getById`, `create`, `update` y `delete` contra `/restaurants/:restaurantId/tables`.
+- **`store/table.store.ts`:** `TableStore` con las signals `tables`, `loading` y `error`, y los métodos `loadByRestaurant`, `create`, `update` y `delete`. Mantiene la lista ordenada por número.
+- **`pages/table-list`:** tabla con número, descripción, capacidad y estado, con una etiqueta de color por estado (verde libre, rojo ocupada, amarillo reservada). Para borrar pide confirmación con `confirm()`.
+- **`pages/table-form`:** alta y edición con `FormsModule`. El estado solo se muestra al editar, porque al crear la mesa siempre queda `libre`. Al editar, la mesa se carga con `GET /tables/:id` y se envía el body completo en el `PUT`. Una descripción vacía se envía como `null`.
+
+**Errores.** `models/table-errors.ts` traduce los errores de la API al español a partir del nombre que llega en `err.error?.error` (`DuplicatedTableNumberError`, `InvalidTableNumberError`, `InvalidCapacityError`, `InvalidTableStatusError`, `TableNotFoundError` y `TableOccupiedError`), y trata el 403 por `err.status`. Nunca muestra el `message` de la API, que está en inglés. El formulario enseña el error en su `alert-error`. La lista avisa con `alert()` si se intenta borrar una mesa ocupada, y recarga si la mesa ya no existe.
+
+---
+
 ## Gestión de Estado: el patrón Store
 
 Es el patrón estándar en **`web-admin` y `web-empleados`**: cada feature con datos remotos tiene su store, un servicio `providedIn: 'root'` con signals privadas expuestas como solo lectura:
