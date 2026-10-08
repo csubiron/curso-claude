@@ -67,6 +67,21 @@ Ninguna de las tres aplicaciones tiene carpeta `shared/` propia: lo compartido v
 
 ---
 
+## Mesas en web-admin
+
+La feature `features/tables` permite al admin gestionar las mesas de cada restaurante (CRUD). Sigue la misma estructura que `features/ingredients`:
+
+- **Rutas:** `tables.routes.ts` cuelga de `restaurants/:restaurantId/tables`, con `''` (lista), `new` (alta) y `:id/edit` (edición). Se llega desde el enlace "Mesas" del submenú del restaurante en el shell y desde la tarjeta "Mesas" del dashboard del restaurante (icono `armchair`).
+- **`models/table.model.ts`:** `Table`, `TableStatus` (`libre`, `ocupada`, `reservada`), `CreateTableDto` (`number`, `description`, `capacity`) y `UpdateTableDto` (los mismos campos más `status`).
+- **`services/table.service.ts`:** `getAll`, `getById`, `create`, `update` y `delete` contra `/restaurants/:restaurantId/tables`.
+- **`store/table.store.ts`:** `TableStore` con las signals `tables`, `loading` y `error`, y los métodos `loadByRestaurant`, `create`, `update` y `delete`. Mantiene la lista ordenada por número.
+- **`pages/table-list`:** tabla con número, descripción, capacidad y estado, con una etiqueta de color por estado (verde libre, rojo ocupada, amarillo reservada). Para borrar pide confirmación con `confirm()`.
+- **`pages/table-form`:** alta y edición con `FormsModule`. El estado solo se muestra al editar, porque al crear la mesa siempre queda `libre`. Al editar, la mesa se carga con `GET /tables/:id` y se envía el body completo en el `PUT`. Una descripción vacía se envía como `null`.
+
+**Errores.** `models/table-errors.ts` traduce los errores de la API al español a partir del nombre que llega en `err.error?.error` (`DuplicatedTableNumberError`, `InvalidTableNumberError`, `InvalidCapacityError`, `InvalidTableStatusError`, `TableNotFoundError` y `TableOccupiedError`), y trata el 403 por `err.status`. Nunca muestra el `message` de la API, que está en inglés. El formulario enseña el error en su `alert-error`. La lista avisa con `alert()` si se intenta borrar una mesa ocupada, y recarga si la mesa ya no existe.
+
+---
+
 ## Gestión de Estado: el patrón Store
 
 Es el patrón estándar en **`web-admin` y `web-empleados`**: cada feature con datos remotos tiene su store, un servicio `providedIn: 'root'` con signals privadas expuestas como solo lectura:
@@ -122,6 +137,29 @@ Para todo lo demás (restaurantes, carta/platos, confirmación y consulta de ped
 
 ---
 
+## Mesas en web-empleados
+
+La feature `features/tables/` permite a `manager`, `camarero` y `cocinero` ver las mesas de su restaurante y cambiar su estado. Sigue la misma estructura que `features/orders`:
+
+- **`models/table.model.ts`:** `Table`, `TableStatus` (`libre` | `ocupada` | `reservada`), `TABLE_STATUSES` y `UpdateTableStatusDto`.
+- **`services/table.service.ts`:**
+  - `getAll(restaurantId)` → `GET /restaurants/:restaurantId/tables`.
+  - `updateStatus(restaurantId, id, { status })` → `PATCH /restaurants/:restaurantId/tables/:id/status`.
+- **`store/table.store.ts` (`TableStore`):**
+  - Signals `tables`, `loading` y `error`.
+  - `loadTables()`.
+  - `changeStatus()`: sustituye la mesa en memoria por la `Table` que devuelve la API. Si recibe un 404, recarga la lista.
+  - `startPolling()` / `stopPolling()` cada 30 s, igual que `OrderStore`.
+  - Los errores se traducen al español según `err.status` (403) y el nombre en `err.error?.error` (`InvalidTableStatusError`, `TableNotFoundError`), con un texto por defecto.
+- **`pages/tables/` (`TablesComponent`, ruta `/mesas`):**
+  - Rejilla de mesas con número, descripción, capacidad, estado (etiqueta de color) y un selector para cambiarlo.
+  - El `restaurantId` sale de `authStore.user()`.
+  - En `ngOnInit` arranca el polling de `TableStore` y también el de `OrderStore`, y en `ngOnDestroy` los para.
+  - Para cada mesa `ocupada` muestra sus pedidos activos con cada plato y su estado. Cruza `OrderStore.orders()` (`GET /orders/active`) con las mesas en un `computed`, usando `order.tableId === table.id`.
+- **Navegación:** `ShellComponent` expone `canSeeMesas` (manager, camarero y cocinero) y muestra el enlace "Mesas" con el icono `layout-grid`.
+
+---
+
 ## Librería Compartida: `@resttek/web-shared`
 
 Centraliza todo lo que comparten los 3 frontends:
@@ -160,6 +198,33 @@ export * from './lib/http/error.interceptor'
 export * from './lib/components/login/login.component'
 export * from './lib/components/register/register.component'
 ```
+
+---
+
+## Mesas en web-clientes
+
+Antes de ver la carta de un restaurante, el cliente tiene que elegir mesa.
+
+**Flujo:**
+
+1. En `/restaurants`, cada tarjeta enlaza a `/restaurants/:id/table` (`features/tables/table-selection.component.ts`).
+2. El cliente indica el número de personas (entero de 1 o más) y pulsa "Buscar mesas". `TableService.getAvailable(restaurantId, people)` llama a `GET /public/restaurants/:id/tables?people=N`, que devuelve solo las mesas `libre` con capacidad suficiente, ordenadas por capacidad y número. Si no hay ninguna, se muestra "No hay mesas disponibles para N personas".
+3. Al elegir una mesa y pulsar "Continuar", `TableService.occupy(restaurantId, tableId, people)` llama a `POST /restaurants/:id/tables/:tableId/occupy` (solo rol `cliente`). Con la respuesta se llama a `CartStore.setTable()` y se navega a `/restaurants/:id`.
+4. Si la API responde `TableNotAvailableError` o `TableNotFoundError` (otro cliente la acaba de ocupar), se muestra "Esa mesa ya no está disponible" y se recarga la lista. Un `403` muestra "Solo los clientes pueden reservar mesa". Los errores se leen con `err.error?.error`.
+5. Si el cliente ya tiene mesa en ese restaurante, la página muestra "Ya tienes la Mesa N" y permite continuar sin volver a ocuparla (no hay endpoint para que el cliente libere una mesa).
+
+**`CartStore.table`:**
+
+- Signal de solo lectura con `{ id, number, restaurantId } | null`. Guarda su propio `restaurantId` porque el del carrito se pone a `null` al vaciarlo.
+- `setTable(restaurantId, table)` la guarda y vacía el carrito si era de otro restaurante. `addItem()` de un plato de otro restaurante la borra.
+- `hasTableFor(restaurantId)` indica si hay mesa elegida para ese restaurante.
+- `clear()` borra el carrito y la mesa. `clearItems()` borra solo el carrito: es lo que usa `CartComponent` después de confirmar un pedido, para que el cliente pueda seguir pidiendo en la misma mesa.
+- No se persiste: si el cliente recarga la página pierde la mesa y vuelve a la selección. La mesa sigue `ocupada` hasta que un empleado la libera.
+
+**Carta y carrito:**
+
+- `RestaurantMenuComponent` redirige a `/restaurants/:id/table` (con `replaceUrl`) si `CartStore` no tiene mesa para ese restaurante, y muestra la etiqueta "Mesa N".
+- `CartComponent.confirmOrder()` envía `POST /orders` con el `tableId` de la mesa elegida (`OrderService.createOrder(restaurantId, tableId, items)`). Si no hay mesa para el restaurante del carrito, redirige a la selección.
 
 ---
 

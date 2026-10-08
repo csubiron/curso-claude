@@ -1,0 +1,154 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: fadeIn 0.3s ease;
+}
+
+.table-header {
+  padding: 14px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-number {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.table-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.table-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.table-capacity {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.table-status-libre {
+  background: var(--green-glow);
+  color: var(--green-light);
+}
+
+.table-status-ocupada {
+  background: var(--red-glow);
+  color: var(--red);
+}
+
+.table-status-reservada {
+  background: var(--yellow-glow);
+  color: var(--yellow);
+}
+
+.badge-pendiente {
+  background: var(--yellow-glow);
+  color: var(--yellow);
+}
+
+.badge-preparando {
+  background: var(--orange-glow);
+  color: var(--orange);
+}
+
+.badge-listo {
+  background: var(--green-glow);
+  color: var(--green-light);
+}
+
+.badge-entregado {
+  background: rgba(139, 146, 168, 0.1);
+  color: var(--text-muted);
+}
+
+.table-orders {
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.table-orders h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.table-order {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.order-id {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-name {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.no-orders {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
