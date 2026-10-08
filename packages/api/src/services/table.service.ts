@@ -7,7 +7,9 @@ import {
     InvalidCapacityError,
     DuplicatedTableNumberError,
     TableNotFoundError,
-    TableOccupiedError
+    TableOccupiedError,
+    TableNotAvailableError,
+    InvalidPeopleCountError
 } from '@errors/DomainErrors.js'
 
 export interface CreateTableDTO {
@@ -94,6 +96,28 @@ export class TableService {
 
         await this.tableRepository.save(updated)
         return updated
+    }
+
+    async findAvailable(restaurantId: string, people: unknown): Promise<Table[]> {
+        this.ensureValidPeople(people)
+        return this.tableRepository.findAvailable(restaurantId, people)
+    }
+
+    async occupy(restaurantId: string, id: string, people: unknown): Promise<Table> {
+        this.ensureValidPeople(people)
+
+        const occupied = await this.tableRepository.occupyIfAvailable(id, restaurantId, people)
+        const table = await this.findById(restaurantId, id)
+        if (!occupied) {
+            throw new TableNotAvailableError()
+        }
+        return table
+    }
+
+    private ensureValidPeople(people: unknown): asserts people is number {
+        if (!isPositiveInteger(people)) {
+            throw new InvalidPeopleCountError()
+        }
     }
 
     async findById(restaurantId: string, id: string): Promise<Table> {

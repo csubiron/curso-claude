@@ -219,6 +219,67 @@ describe('TableService', () => {
         })
     })
 
+    describe('findAvailable and occupy', () => {
+        const now = new Date().toISOString()
+        const base = { description: null, restaurantId: 'r1', createdAt: now, updatedAt: now }
+
+        beforeEach(async () => {
+            await repo.save({ ...base, id: 'big', number: 1, capacity: 8, status: 'libre' })
+            await repo.save({ ...base, id: 'four-b', number: 3, capacity: 4, status: 'libre' })
+            await repo.save({ ...base, id: 'four-a', number: 2, capacity: 4, status: 'libre' })
+            await repo.save({ ...base, id: 'small', number: 4, capacity: 2, status: 'libre' })
+            await repo.save({ ...base, id: 'busy', number: 5, capacity: 6, status: 'ocupada' })
+            await repo.save({ ...base, id: 'reserved', number: 6, capacity: 6, status: 'reservada' })
+            await repo.save({ ...base, id: 'other', number: 1, capacity: 6, status: 'libre', restaurantId: 'r2' })
+        })
+
+        it('should list free tables with enough capacity ordered by capacity and number', async () => {
+            const tables = await service.findAvailable('r1', 3)
+            expect(tables.map(t => t.id)).toEqual(['four-a', 'four-b', 'big'])
+        })
+
+        it('should return an empty list when no table fits', async () => {
+            expect(await service.findAvailable('r1', 20)).toEqual([])
+        })
+
+        it.each([undefined, null, 0, -1, 2.5, '3', NaN])('should throw InvalidPeopleCountError in findAvailable when people is %j', async (people) => {
+            await expect(service.findAvailable('r1', people)).rejects.toThrow(errorNamed('InvalidPeopleCountError'))
+        })
+
+        it('should occupy a free table and return it occupied', async () => {
+            const table = await service.occupy('r1', 'four-a', 3)
+
+            expect(table).toMatchObject({ id: 'four-a', number: 2, capacity: 4, status: 'ocupada' })
+            expect((await repo.findById('four-a'))?.status).toBe('ocupada')
+        })
+
+        it('should throw TableNotAvailableError when the table is occupied or reserved', async () => {
+            await expect(service.occupy('r1', 'busy', 2)).rejects.toThrow(errorNamed('TableNotAvailableError'))
+            await expect(service.occupy('r1', 'reserved', 2)).rejects.toThrow(errorNamed('TableNotAvailableError'))
+        })
+
+        it('should throw TableNotAvailableError when the table is too small', async () => {
+            await expect(service.occupy('r1', 'small', 3)).rejects.toThrow(errorNamed('TableNotAvailableError'))
+            expect((await repo.findById('small'))?.status).toBe('libre')
+        })
+
+        it('should let only the first of two clients occupy the same table', async () => {
+            await service.occupy('r1', 'big', 2)
+            await expect(service.occupy('r1', 'big', 2)).rejects.toThrow(errorNamed('TableNotAvailableError'))
+        })
+
+        it('should throw TableNotFoundError for an unknown table or a table of another restaurant', async () => {
+            await expect(service.occupy('r1', 'unknown', 2)).rejects.toThrow(errorNamed('TableNotFoundError'))
+            await expect(service.occupy('r1', 'other', 2)).rejects.toThrow(errorNamed('TableNotFoundError'))
+            expect((await repo.findById('other'))?.status).toBe('libre')
+        })
+
+        it.each([undefined, null, 0, 1.5, '2'])('should throw InvalidPeopleCountError in occupy when people is %j', async (people) => {
+            await expect(service.occupy('r1', 'big', people)).rejects.toThrow(errorNamed('InvalidPeopleCountError'))
+            expect((await repo.findById('big'))?.status).toBe('libre')
+        })
+    })
+
     describe('findById and findByRestaurantId', () => {
         beforeEach(async () => {
             await service.create({ ...validInput, number: 3 })

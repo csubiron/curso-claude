@@ -198,3 +198,15 @@ export class TableOccupiedError extends AppError {
   }
 }
 
+export class TableNotAvailableError extends AppError {
+  constructor() {
+    super('The table is not available')
+  }
+}
+
+export class InvalidPeopleCountError extends AppError {
+  constructor() {
+    super('People must be an integer greater than or equal to 1')
+  }
+}
+
