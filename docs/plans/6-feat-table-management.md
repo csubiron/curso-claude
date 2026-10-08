@@ -228,56 +228,56 @@ Las tareas de frontend dependen solo del contrato de la sección 4, así que se 
 
 ### 6.1 API (`packages/api`)
 
-1. [ ] Modelo `Table` y `normalizeTableStatus()`, con `InvalidTableStatusError`. Test: describe `normalizeTableStatus` en `services/table.service.test.ts` (valores válidos, mayúsculas y valor inválido). Ficheros: `models/table.model.ts`, `errors/DomainErrors.ts`.
-2. [ ] Tabla `tables` en `runInitialMigrations()` y `SqliteTableRepository` con `save`, `findById` y `delete`. Test: `repositories/table.repository.test.ts` (guardar, buscar y borrar en memoria). Ficheros: `config/database.ts`, `repositories/table.repository.ts`.
-3. [ ] Repositorio: `findByRestaurantId` (ordenado por `number`) y `findByNumber(restaurantId, number)`. Test: integración en `table.repository.test.ts`.
-4. [ ] Repositorio: `findAvailable(restaurantId, people)`, que devuelve las mesas `libre` con `capacity >= people` ordenadas por capacidad y número. Test: integración con mesas libres, ocupadas, pequeñas y de otro restaurante.
-5. [ ] Repositorio: `occupyIfAvailable(id, restaurantId, people): Promise<boolean>`, con un `UPDATE` condicional y `changes`. Test: integración (ocupa una libre; devuelve `false` si ya está ocupada, si es pequeña o si es de otro restaurante).
-6. [ ] `MockTableRepository` y `TableService.create`, con las validaciones de número y capacidad, el estado `libre` por defecto y el número duplicado. Errores nuevos: `InvalidTableNumberError`, `InvalidCapacityError` y `DuplicatedTableNumberError`. Test: `table.service.test.ts`. Ficheros: `repositories/mocks/MockTableRepository.ts`, `services/table.service.ts`, `errors/DomainErrors.ts`.
-7. [ ] `TableService.update`, `delete`, `findById` y `findByRestaurantId`. Incluye el número duplicado al editar, `TableNotFoundError` (añadido a `NOT_FOUND_ERRORS`) y `TableOccupiedError` al borrar una mesa ocupada. Test: `table.service.test.ts`. Ficheros: `services/table.service.ts`, `errors/DomainErrors.ts`, `errorHandler.ts`.
-8. [ ] `TableService.changeStatus(id, status)`. Test: cambia el estado y actualiza `updatedAt`; error si el estado no es válido o la mesa no existe.
-9. [ ] `TableService.findAvailable(restaurantId, people)` y `occupy(restaurantId, id, people)`, con `InvalidPeopleCountError`, `TableNotFoundError` y `TableNotAvailableError`. Test: `table.service.test.ts` (el mock implementa `occupyIfAvailable` con la misma regla).
-10. [ ] `TableController` y `routes/table.routes.ts` (CRUD, `PATCH /:id/status` y `POST /:id/occupy`, con los roles de la sección 4), registrados en `app.ts`. No hay tests HTTP en el proyecto, así que se verifica con `npx tsc --noEmit -p packages/api`, la suite en verde y una prueba manual con `curl` (crear, listar, cambiar estado y ocupar).
-11. [ ] `routes/table.public.routes.ts` (`GET /?people=N`) registrado en `app.ts` bajo `/api/v1/public/restaurants/:restaurantId/tables`. Se verifica con `tsc`, la suite y `curl`.
-12. [ ] Seed: 6 mesas para `rest-1` y 4 para `rest-2` (capacidades de 2 a 8), con `INSERT OR IGNORE` e ids fijos para que sea idempotente. Se verifica ejecutando `npm run seed` dos veces y la suite.
-13. [ ] Documentación: tabla `tables` y relación en `docs/dominio/modelo-datos.md`; "Mesa" y sus estados en `docs/dominio/glosario.md`; endpoints y dominio en `docs/arquitectura/arquitectura-api.md`.
+1. [x] Modelo `Table` y `normalizeTableStatus()`, con `InvalidTableStatusError`. Test: describe `normalizeTableStatus` en `services/table.service.test.ts` (valores válidos, mayúsculas y valor inválido). Ficheros: `models/table.model.ts`, `errors/DomainErrors.ts`.
+2. [x] Tabla `tables` en `runInitialMigrations()` y `SqliteTableRepository` con `save`, `findById` y `delete`. Test: `repositories/table.repository.test.ts` (guardar, buscar y borrar en memoria). Ficheros: `config/database.ts`, `repositories/table.repository.ts`.
+3. [x] Repositorio: `findByRestaurantId` (ordenado por `number`) y `findByNumber(restaurantId, number)`. Test: integración en `table.repository.test.ts`.
+4. [x] Repositorio: `findAvailable(restaurantId, people)`, que devuelve las mesas `libre` con `capacity >= people` ordenadas por capacidad y número. Test: integración con mesas libres, ocupadas, pequeñas y de otro restaurante.
+5. [x] Repositorio: `occupyIfAvailable(id, restaurantId, people): Promise<boolean>`, con un `UPDATE` condicional y `changes`. Test: integración (ocupa una libre; devuelve `false` si ya está ocupada, si es pequeña o si es de otro restaurante).
+6. [x] `MockTableRepository` y `TableService.create`, con las validaciones de número y capacidad, el estado `libre` por defecto y el número duplicado. Errores nuevos: `InvalidTableNumberError`, `InvalidCapacityError` y `DuplicatedTableNumberError`. Test: `table.service.test.ts`. Ficheros: `repositories/mocks/MockTableRepository.ts`, `services/table.service.ts`, `errors/DomainErrors.ts`.
+7. [x] `TableService.update`, `delete`, `findById` y `findByRestaurantId`. Incluye el número duplicado al editar, `TableNotFoundError` (añadido a `NOT_FOUND_ERRORS`) y `TableOccupiedError` al borrar una mesa ocupada. Test: `table.service.test.ts`. Ficheros: `services/table.service.ts`, `errors/DomainErrors.ts`, `errorHandler.ts`.
+8. [x] `TableService.changeStatus(id, status)`. Test: cambia el estado y actualiza `updatedAt`; error si el estado no es válido o la mesa no existe.
+9. [x] `TableService.findAvailable(restaurantId, people)` y `occupy(restaurantId, id, people)`, con `InvalidPeopleCountError`, `TableNotFoundError` y `TableNotAvailableError`. Test: `table.service.test.ts` (el mock implementa `occupyIfAvailable` con la misma regla).
+10. [x] `TableController` y `routes/table.routes.ts` (CRUD, `PATCH /:id/status` y `POST /:id/occupy`, con los roles de la sección 4), registrados en `app.ts`. No hay tests HTTP en el proyecto, así que se verifica con `npx tsc --noEmit -p packages/api`, la suite en verde y una prueba manual con `curl` (crear, listar, cambiar estado y ocupar).
+11. [x] `routes/table.public.routes.ts` (`GET /?people=N`) registrado en `app.ts` bajo `/api/v1/public/restaurants/:restaurantId/tables`. Se verifica con `tsc`, la suite y `curl`.
+12. [x] Seed: 6 mesas para `rest-1` y 4 para `rest-2` (capacidades de 2 a 8), con `INSERT OR IGNORE` e ids fijos para que sea idempotente. Se verifica ejecutando `npm run seed` dos veces y la suite.
+13. [x] Documentación: tabla `tables` y relación en `docs/dominio/modelo-datos.md`; "Mesa" y sus estados en `docs/dominio/glosario.md`; endpoints y dominio en `docs/arquitectura/arquitectura-api.md`.
 
 ### 6.2 web-admin (`packages/web-admin`)
 
-14. [ ] `features/tables/models/table.model.ts` (`Table`, `TableStatus`, `CreateTableDto` y `UpdateTableDto`) y `services/table.service.ts` (`getAll`, `create`, `update` y `delete`, igual que `IngredientService`). Se verifica con `npm run build -w @resttek/web-admin`.
-15. [ ] `features/tables/store/table.store.ts`, con las signals `tables`, `loading` y `error`, y los métodos `loadByRestaurant`, `create`, `update` y `delete`. Se verifica con el build.
-16. [ ] Página `pages/table-list`: tabla con número, descripción, capacidad y estado (con una etiqueta de color por estado), botones de editar y borrar (`confirm()`), y el error de `TableOccupiedError` mostrado. Se verifica con el build.
-17. [ ] Página `pages/table-form`: alta y edición con `FormsModule`. Campos: número, descripción, capacidad y un select de estado (solo al editar). Muestra los errores de la API. Se verifica con el build.
-18. [ ] `tables.routes.ts` (`''`, `new` y `:id/edit`), ruta `tables` en `app.routes.ts`, enlace "Mesas" en el submenú de `shell.component.html`, tarjeta en `restaurant-dashboard` e icono en `app.config.ts`. Se verifica con el build y comprobando a mano la navegación con `npm run dev:admin`.
-19. [ ] Documentación: feature `tables` de web-admin en `docs/arquitectura/arquitectura-frontend.md`.
+14. [x] `features/tables/models/table.model.ts` (`Table`, `TableStatus`, `CreateTableDto` y `UpdateTableDto`) y `services/table.service.ts` (`getAll`, `create`, `update` y `delete`, igual que `IngredientService`). Se verifica con `npm run build -w @resttek/web-admin`.
+15. [x] `features/tables/store/table.store.ts`, con las signals `tables`, `loading` y `error`, y los métodos `loadByRestaurant`, `create`, `update` y `delete`. Se verifica con el build.
+16. [x] Página `pages/table-list`: tabla con número, descripción, capacidad y estado (con una etiqueta de color por estado), botones de editar y borrar (`confirm()`), y el error de `TableOccupiedError` mostrado. Se verifica con el build.
+17. [x] Página `pages/table-form`: alta y edición con `FormsModule`. Campos: número, descripción, capacidad y un select de estado (solo al editar). Muestra los errores de la API. Se verifica con el build.
+18. [x] `tables.routes.ts` (`''`, `new` y `:id/edit`), ruta `tables` en `app.routes.ts`, enlace "Mesas" en el submenú de `shell.component.html`, tarjeta en `restaurant-dashboard` e icono en `app.config.ts`. Se verifica con el build y comprobando a mano la navegación con `npm run dev:admin`.
+19. [x] Documentación: feature `tables` de web-admin en `docs/arquitectura/arquitectura-frontend.md`.
 
 ### 6.3 web-empleados (`packages/web-empleados`)
 
-20. [ ] `features/tables/models/table.model.ts` y `services/table.service.ts` (`getAll(restaurantId)` y `updateStatus(restaurantId, id, status)`). Se verifica con `npm run build -w @resttek/web-empleados`.
-21. [ ] `features/tables/store/table.store.ts`, con las signals `tables`, `loading` y `error`, `loadTables`, `changeStatus` (que actualiza el estado local con la respuesta) y `startPolling`/`stopPolling` cada 30 s, igual que `OrderStore`. Se verifica con el build.
-22. [ ] Página `pages/tables`: rejilla de mesas con número, descripción, capacidad y estado, y un selector para cambiar el estado. El `restaurantId` sale de `authStore.user()`. Arranca y para el polling en `ngOnInit`/`ngOnDestroy`. Se verifica con el build.
-23. [ ] En la página de mesas, para cada mesa `ocupada`, lista de sus pedidos activos (`OrderStore.orders()` filtrado por `tableId` en un `computed`), con cada plato y su estado. Arranca también el polling de `OrderStore`. Se verifica con el build.
-24. [ ] Ruta `mesas` en `app.routes.ts`, `canSeeMesas` (manager, camarero y cocinero) y enlace "Mesas" en el `ShellComponent`, e icono en `app.config.ts`. Se verifica con el build y comprobando a mano con `npm run dev:empleados`.
-25. [ ] Documentación: feature `tables` de web-empleados en `docs/arquitectura/arquitectura-frontend.md`.
+20. [x] `features/tables/models/table.model.ts` y `services/table.service.ts` (`getAll(restaurantId)` y `updateStatus(restaurantId, id, status)`). Se verifica con `npm run build -w @resttek/web-empleados`.
+21. [x] `features/tables/store/table.store.ts`, con las signals `tables`, `loading` y `error`, `loadTables`, `changeStatus` (que actualiza el estado local con la respuesta) y `startPolling`/`stopPolling` cada 30 s, igual que `OrderStore`. Se verifica con el build.
+22. [x] Página `pages/tables`: rejilla de mesas con número, descripción, capacidad y estado, y un selector para cambiar el estado. El `restaurantId` sale de `authStore.user()`. Arranca y para el polling en `ngOnInit`/`ngOnDestroy`. Se verifica con el build.
+23. [x] En la página de mesas, para cada mesa `ocupada`, lista de sus pedidos activos (`OrderStore.orders()` filtrado por `tableId` en un `computed`), con cada plato y su estado. Arranca también el polling de `OrderStore`. Se verifica con el build.
+24. [x] Ruta `mesas` en `app.routes.ts`, `canSeeMesas` (manager, camarero y cocinero) y enlace "Mesas" en el `ShellComponent`, e icono en `app.config.ts`. Se verifica con el build y comprobando a mano con `npm run dev:empleados`.
+25. [x] Documentación: feature `tables` de web-empleados en `docs/arquitectura/arquitectura-frontend.md`.
 
 ### 6.4 web-clientes (`packages/web-clientes`)
 
-26. [ ] `core/models/table.model.ts` y `core/services/table.service.ts`:
+26. [x] `core/models/table.model.ts` y `core/services/table.service.ts`:
     - `getAvailable(restaurantId, people)` → `GET /public/restaurants/:id/tables?people=`.
     - `occupy(restaurantId, tableId, people)` → `POST /restaurants/:id/tables/:tableId/occupy`.
 
     Se verifica con `npm run build -w @resttek/web-clientes`.
-27. [ ] `CartStore`: signal `table` (`{ id, number } | null`) y `setTable(restaurantId, table)`. Se limpia con `clear()` y al cambiar de restaurante. Se verifica con el build.
-28. [ ] `OrderService.createOrder(restaurantId, tableId, items)` y `CartComponent.confirmOrder()`, que envía `cartStore.table()?.id`. Se verifica con el build.
-29. [ ] Página `features/tables/table-selection.component`:
+27. [x] `CartStore`: signal `table` (`{ id, number } | null`) y `setTable(restaurantId, table)`. Se limpia con `clear()` y al cambiar de restaurante. Se verifica con el build.
+28. [x] `OrderService.createOrder(restaurantId, tableId, items)` y `CartComponent.confirmOrder()`, que envía `cartStore.table()?.id`. Se verifica con el build.
+29. [x] Página `features/tables/table-selection.component`:
     - Campo de personas y botón "Buscar mesas".
     - Lista de mesas disponibles con un mensaje si no hay ninguna.
     - Selección de mesa y botón "Continuar", que llama a `occupy`, guarda la mesa en `CartStore` y navega a `/restaurants/:id`.
     - Si recibe `TableNotAvailableError`, muestra el mensaje y recarga la lista.
 
     Se verifica con el build.
-30. [ ] Ruta `restaurants/:id/table` en `app.routes.ts`. Las tarjetas de `restaurant-list` enlazan a ella. `restaurant-menu` redirige a la selección si no hay mesa para ese restaurante y muestra "Mesa N". Se verifica con el build y con el flujo completo a mano usando `npm run dev:clientes`.
-31. [ ] Documentación: flujo de selección de mesa y `CartStore.table` en `docs/arquitectura/arquitectura-frontend.md`.
+30. [x] Ruta `restaurants/:id/table` en `app.routes.ts`. Las tarjetas de `restaurant-list` enlazan a ella. `restaurant-menu` redirige a la selección si no hay mesa para ese restaurante y muestra "Mesa N". Se verifica con el build y con el flujo completo a mano usando `npm run dev:clientes`.
+31. [x] Documentación: flujo de selección de mesa y `CartStore.table` en `docs/arquitectura/arquitectura-frontend.md`.
 
 ## 7. Criterios de aceptación
 
