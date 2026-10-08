@@ -163,6 +163,33 @@ export * from './lib/components/register/register.component'
 
 ---
 
+## Mesas en web-clientes
+
+Antes de ver la carta de un restaurante, el cliente tiene que elegir mesa.
+
+**Flujo:**
+
+1. En `/restaurants`, cada tarjeta enlaza a `/restaurants/:id/table` (`features/tables/table-selection.component.ts`).
+2. El cliente indica el número de personas (entero de 1 o más) y pulsa "Buscar mesas". `TableService.getAvailable(restaurantId, people)` llama a `GET /public/restaurants/:id/tables?people=N`, que devuelve solo las mesas `libre` con capacidad suficiente, ordenadas por capacidad y número. Si no hay ninguna, se muestra "No hay mesas disponibles para N personas".
+3. Al elegir una mesa y pulsar "Continuar", `TableService.occupy(restaurantId, tableId, people)` llama a `POST /restaurants/:id/tables/:tableId/occupy` (solo rol `cliente`). Con la respuesta se llama a `CartStore.setTable()` y se navega a `/restaurants/:id`.
+4. Si la API responde `TableNotAvailableError` o `TableNotFoundError` (otro cliente la acaba de ocupar), se muestra "Esa mesa ya no está disponible" y se recarga la lista. Un `403` muestra "Solo los clientes pueden reservar mesa". Los errores se leen con `err.error?.error`.
+5. Si el cliente ya tiene mesa en ese restaurante, la página muestra "Ya tienes la Mesa N" y permite continuar sin volver a ocuparla (no hay endpoint para que el cliente libere una mesa).
+
+**`CartStore.table`:**
+
+- Signal de solo lectura con `{ id, number, restaurantId } | null`. Guarda su propio `restaurantId` porque el del carrito se pone a `null` al vaciarlo.
+- `setTable(restaurantId, table)` la guarda y vacía el carrito si era de otro restaurante. `addItem()` de un plato de otro restaurante la borra.
+- `hasTableFor(restaurantId)` indica si hay mesa elegida para ese restaurante.
+- `clear()` borra el carrito y la mesa. `clearItems()` borra solo el carrito: es lo que usa `CartComponent` después de confirmar un pedido, para que el cliente pueda seguir pidiendo en la misma mesa.
+- No se persiste: si el cliente recarga la página pierde la mesa y vuelve a la selección. La mesa sigue `ocupada` hasta que un empleado la libera.
+
+**Carta y carrito:**
+
+- `RestaurantMenuComponent` redirige a `/restaurants/:id/table` (con `replaceUrl`) si `CartStore` no tiene mesa para ese restaurante, y muestra la etiqueta "Mesa N".
+- `CartComponent.confirmOrder()` envía `POST /orders` con el `tableId` de la mesa elegida (`OrderService.createOrder(restaurantId, tableId, items)`). Si no hay mesa para el restaurante del carrito, redirige a la selección.
+
+---
+
 ## Sistema de Autenticación
 
 ### AuthStore (Signal-based)
