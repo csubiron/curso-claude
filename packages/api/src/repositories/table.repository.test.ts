@@ -145,4 +145,52 @@ describe('SqliteTableRepository (Integration)', () => {
             expect(await repo.findAvailable('r1', 9)).toEqual([])
         })
     })
+
+    describe('occupyIfAvailable', () => {
+        const oldDate = '2020-01-01T00:00:00.000Z'
+
+        beforeAll(async () => {
+            await repo.save(buildTable({ id: 'oc-free', number: 20, capacity: 4, createdAt: oldDate, updatedAt: oldDate }))
+            await repo.save(buildTable({ id: 'oc-busy', number: 21, capacity: 4, status: 'ocupada' }))
+            await repo.save(buildTable({ id: 'oc-reserved', number: 22, capacity: 4, status: 'reservada' }))
+            await repo.save(buildTable({ id: 'oc-small', number: 23, capacity: 2 }))
+        })
+
+        afterAll(async () => {
+            for (const id of ['oc-free', 'oc-busy', 'oc-reserved', 'oc-small']) {
+                await repo.delete(id)
+            }
+        })
+
+        it('should return false for a table of another restaurant and leave it free', async () => {
+            expect(await repo.occupyIfAvailable('oc-free', 'r2', 2)).toBe(false)
+            expect((await repo.findById('oc-free'))?.status).toBe('libre')
+        })
+
+        it('should occupy a free table with enough capacity and update updatedAt', async () => {
+            expect(await repo.occupyIfAvailable('oc-free', 'r1', 4)).toBe(true)
+            const found = await repo.findById('oc-free')
+            expect(found?.status).toBe('ocupada')
+            expect(found?.updatedAt).not.toBe(oldDate)
+        })
+
+        it('should return false when the table is already occupied', async () => {
+            expect(await repo.occupyIfAvailable('oc-free', 'r1', 2)).toBe(false)
+            expect(await repo.occupyIfAvailable('oc-busy', 'r1', 2)).toBe(false)
+        })
+
+        it('should return false when the table is reserved', async () => {
+            expect(await repo.occupyIfAvailable('oc-reserved', 'r1', 2)).toBe(false)
+            expect((await repo.findById('oc-reserved'))?.status).toBe('reservada')
+        })
+
+        it('should return false when the table is too small', async () => {
+            expect(await repo.occupyIfAvailable('oc-small', 'r1', 3)).toBe(false)
+            expect((await repo.findById('oc-small'))?.status).toBe('libre')
+        })
+
+        it('should return false for an unknown table', async () => {
+            expect(await repo.occupyIfAvailable('unknown', 'r1', 1)).toBe(false)
+        })
+    })
 })
