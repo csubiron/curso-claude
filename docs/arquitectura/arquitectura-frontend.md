@@ -137,6 +137,29 @@ Para todo lo demás (restaurantes, carta/platos, confirmación y consulta de ped
 
 ---
 
+## Mesas en web-empleados
+
+La feature `features/tables/` permite a `manager`, `camarero` y `cocinero` ver las mesas de su restaurante y cambiar su estado. Sigue la misma estructura que `features/orders`:
+
+- **`models/table.model.ts`:** `Table`, `TableStatus` (`libre` | `ocupada` | `reservada`), `TABLE_STATUSES` y `UpdateTableStatusDto`.
+- **`services/table.service.ts`:**
+  - `getAll(restaurantId)` → `GET /restaurants/:restaurantId/tables`.
+  - `updateStatus(restaurantId, id, { status })` → `PATCH /restaurants/:restaurantId/tables/:id/status`.
+- **`store/table.store.ts` (`TableStore`):**
+  - Signals `tables`, `loading` y `error`.
+  - `loadTables()`.
+  - `changeStatus()`: sustituye la mesa en memoria por la `Table` que devuelve la API. Si recibe un 404, recarga la lista.
+  - `startPolling()` / `stopPolling()` cada 30 s, igual que `OrderStore`.
+  - Los errores se traducen al español según `err.status` (403) y el nombre en `err.error?.error` (`InvalidTableStatusError`, `TableNotFoundError`), con un texto por defecto.
+- **`pages/tables/` (`TablesComponent`, ruta `/mesas`):**
+  - Rejilla de mesas con número, descripción, capacidad, estado (etiqueta de color) y un selector para cambiarlo.
+  - El `restaurantId` sale de `authStore.user()`.
+  - En `ngOnInit` arranca el polling de `TableStore` y también el de `OrderStore`, y en `ngOnDestroy` los para.
+  - Para cada mesa `ocupada` muestra sus pedidos activos con cada plato y su estado. Cruza `OrderStore.orders()` (`GET /orders/active`) con las mesas en un `computed`, usando `order.tableId === table.id`.
+- **Navegación:** `ShellComponent` expone `canSeeMesas` (manager, camarero y cocinero) y muestra el enlace "Mesas" con el icono `layout-grid`.
+
+---
+
 ## Librería Compartida: `@resttek/web-shared`
 
 Centraliza todo lo que comparten los 3 frontends:

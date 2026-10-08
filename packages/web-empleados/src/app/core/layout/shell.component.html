@@ -39,6 +39,13 @@
             <span>Salón</span>
           </a>
         }
+
+        @if (canSeeMesas()) {
+          <a routerLink="/mesas" routerLinkActive="active" class="nav-item">
+            <lucide-icon name="layout-grid" [size]="18"></lucide-icon>
+            <span>Mesas</span>
+          </a>
+        }
       </nav>
 
       <div class="sidebar-footer">
