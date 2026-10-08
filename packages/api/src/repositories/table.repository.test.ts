@@ -78,4 +78,37 @@ describe('SqliteTableRepository (Integration)', () => {
             expect(await repo.findById('t1')).toBeNull()
         })
     })
+
+    describe('findByRestaurantId and findByNumber', () => {
+        beforeAll(async () => {
+            await repo.save(buildTable({ id: 'list-3', number: 3, restaurantId: 'r1' }))
+            await repo.save(buildTable({ id: 'list-1', number: 1, restaurantId: 'r1' }))
+            await repo.save(buildTable({ id: 'list-2', number: 2, restaurantId: 'r1' }))
+            await repo.save(buildTable({ id: 'list-other', number: 1, restaurantId: 'r2' }))
+        })
+
+        afterAll(async () => {
+            for (const id of ['list-3', 'list-1', 'list-2', 'list-other']) {
+                await repo.delete(id)
+            }
+        })
+
+        it('should return only the tables of the restaurant ordered by number', async () => {
+            const results = await repo.findByRestaurantId('r1')
+            expect(results.map(t => t.id)).toEqual(['list-1', 'list-2', 'list-3'])
+        })
+
+        it('should return an empty list for a restaurant without tables', async () => {
+            expect(await repo.findByRestaurantId('unknown')).toEqual([])
+        })
+
+        it('should find a table by restaurant and number', async () => {
+            expect((await repo.findByNumber('r1', 2))?.id).toBe('list-2')
+            expect((await repo.findByNumber('r2', 1))?.id).toBe('list-other')
+        })
+
+        it('should return null when the number does not exist in the restaurant', async () => {
+            expect(await repo.findByNumber('r2', 3)).toBeNull()
+        })
+    })
 })
