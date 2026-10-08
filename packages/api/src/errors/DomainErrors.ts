@@ -186,3 +186,15 @@ export class DuplicatedTableNumberError extends AppError {
   }
 }
 
+export class TableNotFoundError extends AppError {
+  constructor() {
+    super('Table not found')
+  }
+}
+
+export class TableOccupiedError extends AppError {
+  constructor() {
+    super('An occupied table cannot be deleted')
+  }
+}
+

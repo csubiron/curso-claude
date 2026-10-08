@@ -2,7 +2,13 @@ import { randomUUID } from 'crypto'
 import type { Table } from '@models/table.model.js'
 import { normalizeTableStatus } from '@models/table.model.js'
 import type { TableRepository } from '@repositories/table.repository.js'
-import { InvalidTableNumberError, InvalidCapacityError, DuplicatedTableNumberError } from '@errors/DomainErrors.js'
+import {
+    InvalidTableNumberError,
+    InvalidCapacityError,
+    DuplicatedTableNumberError,
+    TableNotFoundError,
+    TableOccupiedError
+} from '@errors/DomainErrors.js'
 
 export interface CreateTableDTO {
     number: unknown
@@ -10,6 +16,13 @@ export interface CreateTableDTO {
     capacity: unknown
     status?: unknown
     restaurantId: string
+}
+
+export interface UpdateTableDTO {
+    number: unknown
+    description?: unknown
+    capacity: unknown
+    status?: unknown
 }
 
 function isPositiveInteger(value: unknown): value is number {
@@ -41,6 +54,45 @@ export class TableService {
         await this.ensureNumberIsFree(table)
         await this.tableRepository.save(table)
         return table
+    }
+
+    async update(restaurantId: string, id: string, dto: UpdateTableDTO): Promise<Table> {
+        const existing = await this.findById(restaurantId, id)
+
+        const updated = this.buildTable({
+            id: existing.id,
+            number: dto.number,
+            description: dto.description,
+            capacity: dto.capacity,
+            status: dto.status ?? existing.status,
+            restaurantId: existing.restaurantId,
+            createdAt: existing.createdAt,
+            updatedAt: new Date().toISOString()
+        })
+
+        await this.ensureNumberIsFree(updated)
+        await this.tableRepository.save(updated)
+        return updated
+    }
+
+    async delete(restaurantId: string, id: string): Promise<void> {
+        const existing = await this.findById(restaurantId, id)
+        if (existing.status === 'ocupada') {
+            throw new TableOccupiedError()
+        }
+        await this.tableRepository.delete(id)
+    }
+
+    async findById(restaurantId: string, id: string): Promise<Table> {
+        const table = await this.tableRepository.findById(id)
+        if (!table || table.restaurantId !== restaurantId) {
+            throw new TableNotFoundError()
+        }
+        return table
+    }
+
+    async findByRestaurantId(restaurantId: string): Promise<Table[]> {
+        return this.tableRepository.findByRestaurantId(restaurantId)
     }
 
     private async ensureNumberIsFree(table: Table): Promise<void> {
