@@ -17,13 +17,21 @@ export interface CartItem {
   notes: string
 }
 
+export interface SelectedTable {
+  id: string
+  number: number
+  restaurantId: string
+}
+
 @Injectable({ providedIn: 'root' })
 export class CartStore {
   private readonly _items = signal<CartItem[]>([])
   private readonly _restaurantId = signal<string | null>(null)
+  private readonly _table = signal<SelectedTable | null>(null)
 
   readonly items = this._items.asReadonly()
   readonly restaurantId = this._restaurantId.asReadonly()
+  readonly table = this._table.asReadonly()
 
   readonly total = computed(() =>
     this._items().reduce((sum, item) => sum + item.dish.price * item.quantity, 0)
@@ -33,9 +41,24 @@ export class CartStore {
     this._items().reduce((count, item) => count + item.quantity, 0)
   )
 
+  hasTableFor(restaurantId: string): boolean {
+    return this._table()?.restaurantId === restaurantId
+  }
+
+  setTable(restaurantId: string, table: { id: string; number: number }): void {
+    if (this._restaurantId() && this._restaurantId() !== restaurantId) {
+      this._items.set([])
+      this._restaurantId.set(null)
+    }
+    this._table.set({ id: table.id, number: table.number, restaurantId })
+  }
+
   addItem(dish: Dish, quantity: number = 1, notes: string = ''): void {
     if (this._restaurantId() && this._restaurantId() !== dish.restaurantId) {
       this._items.set([])
+    }
+    if (this._table() && this._table()!.restaurantId !== dish.restaurantId) {
+      this._table.set(null)
     }
     this._restaurantId.set(dish.restaurantId)
 
@@ -75,6 +98,11 @@ export class CartStore {
   }
 
   clear(): void {
+    this.clearItems()
+    this._table.set(null)
+  }
+
+  clearItems(): void {
     this._items.set([])
     this._restaurantId.set(null)
   }
