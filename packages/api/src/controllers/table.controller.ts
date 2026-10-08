@@ -79,6 +79,16 @@ export class TableController {
         }
     }
 
+    getAvailable = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const people = typeof req.query.people === 'string' ? Number(req.query.people) : undefined
+            const tables = await this.tableService.findAvailable(req.params.restaurantId as string, people)
+            res.status(200).json(tables.map(t => this.toJSON(t)))
+        } catch (error) {
+            next(error)
+        }
+    }
+
     private toJSON(table: Table) {
         return {
             id: table.id,
