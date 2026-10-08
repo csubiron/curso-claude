@@ -176,6 +176,49 @@ describe('TableService', () => {
         })
     })
 
+    describe('changeStatus', () => {
+        const oldDate = '2020-01-01T00:00:00.000Z'
+
+        beforeEach(async () => {
+            await repo.save({
+                id: 't1', number: 1, description: 'Ventana', capacity: 2, status: 'libre',
+                restaurantId: 'r1', createdAt: oldDate, updatedAt: oldDate
+            })
+        })
+
+        it('should change the status, refresh updatedAt and persist it', async () => {
+            const updated = await service.changeStatus('r1', 't1', ' OCUPADA ')
+
+            expect(updated).toMatchObject({ id: 't1', number: 1, description: 'Ventana', capacity: 2, status: 'ocupada', createdAt: oldDate })
+            expect(updated.updatedAt).not.toBe(oldDate)
+            expect(await repo.findById('t1')).toEqual(updated)
+        })
+
+        it('should accept the same status (idempotent)', async () => {
+            const updated = await service.changeStatus('r1', 't1', 'libre')
+            expect(updated.status).toBe('libre')
+            expect(updated.updatedAt).not.toBe(oldDate)
+        })
+
+        it('should allow any transition', async () => {
+            await service.changeStatus('r1', 't1', 'reservada')
+            await service.changeStatus('r1', 't1', 'ocupada')
+            const updated = await service.changeStatus('r1', 't1', 'libre')
+            expect(updated.status).toBe('libre')
+        })
+
+        it('should throw InvalidTableStatusError for an invalid or missing status', async () => {
+            await expect(service.changeStatus('r1', 't1', 'rota')).rejects.toThrow(errorNamed('InvalidTableStatusError'))
+            await expect(service.changeStatus('r1', 't1', undefined)).rejects.toThrow(errorNamed('InvalidTableStatusError'))
+            expect((await repo.findById('t1'))?.status).toBe('libre')
+        })
+
+        it('should throw TableNotFoundError for an unknown table or a table of another restaurant', async () => {
+            await expect(service.changeStatus('r1', 'unknown', 'libre')).rejects.toThrow(errorNamed('TableNotFoundError'))
+            await expect(service.changeStatus('r2', 't1', 'ocupada')).rejects.toThrow(errorNamed('TableNotFoundError'))
+        })
+    })
+
     describe('findById and findByRestaurantId', () => {
         beforeEach(async () => {
             await service.create({ ...validInput, number: 3 })

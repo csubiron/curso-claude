@@ -83,6 +83,19 @@ export class TableService {
         await this.tableRepository.delete(id)
     }
 
+    async changeStatus(restaurantId: string, id: string, status: unknown): Promise<Table> {
+        const existing = await this.findById(restaurantId, id)
+
+        const updated: Table = {
+            ...existing,
+            status: normalizeTableStatus(status as string),
+            updatedAt: new Date().toISOString()
+        }
+
+        await this.tableRepository.save(updated)
+        return updated
+    }
+
     async findById(restaurantId: string, id: string): Promise<Table> {
         const table = await this.tableRepository.findById(id)
         if (!table || table.restaurantId !== restaurantId) {
